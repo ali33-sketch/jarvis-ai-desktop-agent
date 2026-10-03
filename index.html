@@ -3,251 +3,493 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nexus AI Agent</title>
+    <title>Nexus AI Agent - Command Center</title>
     <style>
-      :root {
-        --bg: #07111f;
-        --panel: rgba(12, 21, 35, 0.92);
-        --panel-2: rgba(16, 27, 41, 0.9);
-        --line: rgba(255,255,255,0.08);
-        --text: #edf7ff;
-        --muted: #a5bdd8;
-        --cyan: #5ed9ff;
-        --blue: #518dff;
-        --green: #70f0b2;
-        --glow: rgba(70, 203, 255, 0.35);
-      }
-
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      
       html, body {
-        margin: 0;
+        width: 100%;
         height: 100%;
-        font-family: Inter, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, rgba(48,120,255,0.22), transparent 30%), linear-gradient(180deg, #07111f 0%, #0b1320 100%);
-        color: var(--text);
+        font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+        background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1329 100%);
+        color: #e8f4ff;
+        overflow: hidden;
       }
 
-      body {
-        display: flex;
-        align-items: stretch;
-        justify-content: center;
-        min-height: 100vh;
+      @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(94, 217, 255, 0.5), inset 0 0 20px rgba(94, 217, 255, 0.1); }
+        50% { box-shadow: 0 0 40px rgba(94, 217, 255, 0.8), inset 0 0 40px rgba(94, 217, 255, 0.2); }
+      }
+
+      @keyframes float-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes scan-line {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+      }
+
+      @keyframes neon-flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 10px #5ed9ff, 0 0 20px #5ed9ff; }
+        20%, 24%, 55% { text-shadow: 0 0 5px #5ed9ff; }
+      }
+
+      @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2.5); opacity: 0; }
       }
 
       .app-shell {
-        width: min(1400px, 100%);
-        min-height: 100vh;
+        width: 100%;
+        height: 100vh;
         display: grid;
-        grid-template-columns: 260px 1fr;
+        grid-template-columns: minmax(0, 280px) 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 0;
       }
 
       .sidebar {
-        background: rgba(9, 17, 27, 0.96);
-        border-right: 1px solid var(--line);
-        padding: 24px 18px;
+        grid-column: 1;
+        grid-row: 1 / 3;
+        background: rgba(8, 15, 35, 0.95);
+        border-right: 2px solid rgba(94, 217, 255, 0.3);
+        padding: 24px 16px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 24px;
+        overflow-y: auto;
+        box-shadow: inset -20px 0 40px rgba(94, 217, 255, 0.05);
       }
 
       .brand {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 8px 6px 12px;
+        padding: 12px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(94, 217, 255, 0.1), rgba(77, 105, 255, 0.1));
+        border: 1px solid rgba(94, 217, 255, 0.2);
       }
 
       .brand-mark {
-        width: 18px;
-        height: 18px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
-        background: linear-gradient(180deg, var(--cyan), var(--blue));
-        box-shadow: 0 0 18px var(--glow);
+        background: linear-gradient(135deg, #5ed9ff, #4d69ff);
+        box-shadow: 0 0 25px rgba(94, 217, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.3);
+        position: relative;
+        animation: glow-pulse 3s infinite;
       }
 
-      h1 {
-        margin: 0;
-        font-size: 1.3rem;
-        letter-spacing: 0.08em;
+      .brand-mark::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid rgba(94, 217, 255, 0.4);
+        animation: pulse-ring 2s infinite;
+      }
+
+      .brand h1 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        background: linear-gradient(135deg, #5ed9ff, #a8d8ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: neon-flicker 3s infinite;
       }
 
       .nav {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
       }
 
       .nav-item {
         width: 100%;
         text-align: left;
         background: transparent;
-        border: 1px solid rgba(255,255,255,0.06);
-        color: var(--text);
+        border: 2px solid rgba(94, 217, 255, 0.2);
+        color: #d0e0f0;
         border-radius: 12px;
-        padding: 12px 14px;
+        padding: 14px 12px;
         cursor: pointer;
-        transition: 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
       }
 
-      .nav-item.active, .nav-item:hover {
-        background: linear-gradient(135deg, rgba(29, 113, 255, 0.18), rgba(99, 224, 255, 0.05));
-        border-color: rgba(98, 197, 255, 0.35);
+      .nav-item::before {
+        content: '';
+        position: absolute;
+        left: -100%;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(94, 217, 255, 0.3), transparent);
+        transition: left 0.5s;
       }
 
-      .status-box {
+      .nav-item:hover {
+        border-color: rgba(94, 217, 255, 0.5);
+        background: rgba(94, 217, 255, 0.08);
+        box-shadow: 0 0 15px rgba(94, 217, 255, 0.2);
+      }
+
+      .nav-item:hover::before {
+        left: 100%;
+      }
+
+      .nav-item.active {
+        background: linear-gradient(135deg, rgba(94, 217, 255, 0.2), rgba(77, 105, 255, 0.15));
+        border-color: rgba(94, 217, 255, 0.6);
+        box-shadow: 0 0 20px rgba(94, 217, 255, 0.4), inset 0 0 10px rgba(94, 217, 255, 0.1);
+        color: #5ed9ff;
+      }
+
+      .status-panel {
         margin-top: auto;
         padding: 16px;
         border-radius: 16px;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
+        background: rgba(94, 217, 255, 0.05);
+        border: 2px solid rgba(94, 217, 255, 0.3);
+        box-shadow: 0 0 20px rgba(94, 217, 255, 0.1), inset 0 0 20px rgba(94, 217, 255, 0.05);
       }
 
-      .status-row {
+      .status-item {
         display: flex;
         justify-content: space-between;
-        gap: 10px;
-        color: var(--muted);
+        align-items: center;
         margin-bottom: 12px;
+        font-size: 0.9rem;
       }
 
-      .status-row:last-child { margin-bottom: 0; }
-
-      .status-row strong {
-        color: var(--text);
+      .status-item:last-child {
+        margin-bottom: 0;
       }
 
-      .main {
+      .status-label {
+        color: #a0c8e0;
+      }
+
+      .status-value {
+        color: #5ed9ff;
+        font-weight: 700;
+        min-width: 80px;
+        text-align: right;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #70f0b2;
+        box-shadow: 0 0 10px #70f0b2;
+        margin-right: 6px;
+      }
+
+      .main-area {
+        grid-column: 2;
+        grid-row: 1 / 3;
         display: flex;
         flex-direction: column;
-        padding: 24px 28px 30px;
-        gap: 18px;
+        gap: 0;
+        background: linear-gradient(135deg, rgba(10, 20, 45, 0.9), rgba(15, 35, 70, 0.85));
+        overflow: hidden;
       }
 
       .topbar {
+        padding: 20px 28px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        align-items: center;
+        border-bottom: 2px solid rgba(94, 217, 255, 0.2);
+        background: rgba(8, 15, 35, 0.7);
+        backdrop-filter: blur(10px);
       }
 
-      .eyebrow {
-        font-size: 0.72rem;
+      .topbar-left h2 {
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        margin: 0;
+        background: linear-gradient(135deg, #5ed9ff, #a8d8ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: neon-flicker 4s infinite;
+      }
+
+      .topbar-left-label {
+        font-size: 0.75rem;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--cyan);
-      }
-
-      .topbar h2 {
-        margin: 6px 0 0;
-        font-size: clamp(1.7rem, 2vw, 2.6rem);
+        letter-spacing: 0.15em;
+        color: #5ed9ff;
+        margin-bottom: 6px;
+        font-weight: 700;
       }
 
       .voice-btn {
-        background: rgba(82, 154, 255, 0.12);
-        border: 1px solid rgba(112, 208, 255, 0.45);
-        color: var(--text);
-        border-radius: 999px;
-        padding: 10px 18px;
+        background: linear-gradient(135deg, rgba(94, 217, 255, 0.15), rgba(77, 105, 255, 0.1));
+        border: 2px solid rgba(94, 217, 255, 0.4);
+        color: #5ed9ff;
+        border-radius: 12px;
+        padding: 12px 20px;
         cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        box-shadow: 0 0 15px rgba(94, 217, 255, 0.2);
+      }
+
+      .voice-btn:hover {
+        background: linear-gradient(135deg, rgba(94, 217, 255, 0.25), rgba(77, 105, 255, 0.2));
+        border-color: rgba(94, 217, 255, 0.7);
+        box-shadow: 0 0 25px rgba(94, 217, 255, 0.4);
+        transform: translateY(-2px);
       }
 
       .banner {
+        margin: 20px 28px;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(94, 217, 255, 0.1), rgba(112, 240, 178, 0.05));
+        border: 2px solid rgba(94, 217, 255, 0.3);
         display: flex;
         align-items: center;
-        gap: 14px;
-        background: rgba(12, 29, 46, 0.9);
-        border: 1px solid rgba(101, 189, 255, 0.22);
-        border-radius: 18px;
-        padding: 18px 20px;
+        gap: 16px;
+        box-shadow: 0 0 20px rgba(94, 217, 255, 0.15);
       }
 
       .signal {
-        width: 14px;
-        height: 14px;
-        background: linear-gradient(180deg, var(--green), #1bd38c);
+        width: 12px;
+        height: 12px;
+        background: linear-gradient(135deg, #70f0b2, #1bd38c);
         border-radius: 50%;
-        box-shadow: 0 0 18px rgba(54, 234, 160, 0.9);
+        box-shadow: 0 0 20px #70f0b2, inset 0 0 10px rgba(255, 255, 255, 0.5);
+        animation: glow-pulse 2s infinite;
       }
 
-      .banner strong, .banner span {
+      .banner-text strong {
         display: block;
+        color: #5ed9ff;
+        margin-bottom: 4px;
       }
 
-      .banner span {
-        color: var(--muted);
-        margin-top: 4px;
+      .banner-text span {
+        color: #a0c8e0;
+        font-size: 0.9rem;
       }
 
-      .chat-panel {
+      .chat-container {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 18px;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        padding: 20px;
+        padding: 0 28px 28px;
+        gap: 16px;
+        min-height: 0;
       }
 
       .message-list {
         flex: 1;
-        overflow: auto;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        min-height: 320px;
+        gap: 14px;
+        padding: 0;
+      }
+
+      .message-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .message-list::-webkit-scrollbar-track {
+        background: rgba(94, 217, 255, 0.05);
+        border-radius: 10px;
+      }
+
+      .message-list::-webkit-scrollbar-thumb {
+        background: rgba(94, 217, 255, 0.3);
+        border-radius: 10px;
+      }
+
+      .message-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(94, 217, 255, 0.5);
       }
 
       .message {
-        max-width: 74%;
-        padding: 12px 14px;
+        max-width: 70%;
+        padding: 14px 16px;
         border-radius: 14px;
-        line-height: 1.55;
+        line-height: 1.6;
         font-size: 0.96rem;
+        animation: float-up 0.4s ease;
+        backdrop-filter: blur(10px);
       }
 
       .message.user {
         align-self: flex-end;
-        background: rgba(61, 109, 255, 0.22);
-        border: 1px solid rgba(113, 151, 255, 0.38);
+        background: linear-gradient(135deg, rgba(77, 105, 255, 0.25), rgba(94, 217, 255, 0.15));
+        border: 2px solid rgba(94, 217, 255, 0.4);
+        color: #e8f4ff;
+        box-shadow: 0 0 15px rgba(94, 217, 255, 0.2);
       }
 
       .message.assistant {
         align-self: flex-start;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(94, 217, 255, 0.08);
+        border: 2px solid rgba(94, 217, 255, 0.25);
+        color: #d0e0f0;
+        box-shadow: 0 0 10px rgba(94, 217, 255, 0.1);
       }
 
-      .composer {
+      .message.system {
+        align-self: center;
+        background: rgba(112, 240, 178, 0.1);
+        border: 2px solid rgba(112, 240, 178, 0.3);
+        color: #70f0b2;
+        max-width: 90%;
+        font-size: 0.9rem;
+        box-shadow: 0 0 15px rgba(112, 240, 178, 0.2);
+      }
+
+      .typing-indicator {
+        display: flex;
+        gap: 6px;
+        padding: 12px 16px;
+      }
+
+      .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(94, 217, 255, 0.6);
+        animation: typing 1.4s infinite;
+      }
+
+      .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+      .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes typing {
+        0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-10px); }
+      }
+
+      .input-area {
         display: flex;
         gap: 12px;
-        margin-top: auto;
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(8, 15, 35, 0.9);
+        border: 2px solid rgba(94, 217, 255, 0.3);
+        box-shadow: 0 0 20px rgba(94, 217, 255, 0.15), inset 0 0 15px rgba(94, 217, 255, 0.05);
       }
 
-      .composer input {
+      .input-area input {
         flex: 1;
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.03);
-        color: var(--text);
-        padding: 14px 16px;
+        background: rgba(20, 40, 70, 0.6);
+        border: 2px solid rgba(94, 217, 255, 0.2);
+        border-radius: 12px;
+        color: #e8f4ff;
+        padding: 12px 16px;
+        font-size: 0.96rem;
+        transition: all 0.3s ease;
         outline: none;
       }
 
-      .composer button {
-        border: none;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #4d69ff, #5ddaff);
-        color: white;
-        padding: 0 18px;
-        font-weight: 700;
-        cursor: pointer;
+      .input-area input::placeholder {
+        color: rgba(160, 200, 224, 0.5);
       }
 
-      @media (max-width: 900px) {
+      .input-area input:focus {
+        border-color: rgba(94, 217, 255, 0.6);
+        background: rgba(20, 40, 70, 0.8);
+        box-shadow: 0 0 15px rgba(94, 217, 255, 0.3);
+      }
+
+      .input-area button {
+        background: linear-gradient(135deg, #5ed9ff, #4d69ff);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(94, 217, 255, 0.4);
+      }
+
+      .input-area button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(94, 217, 255, 0.6);
+        background: linear-gradient(135deg, #7ae5ff, #6d7dff);
+      }
+
+      .input-area button:active {
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1024px) {
+        .app-shell { grid-template-columns: 240px 1fr; }
+        .message { max-width: 80%; }
+      }
+
+      @media (max-width: 768px) {
         .app-shell { grid-template-columns: 1fr; }
-        .sidebar { border-right: none; border-bottom: 1px solid var(--line); }
-        .message { max-width: 90%; }
+        .sidebar {
+          grid-column: 1;
+          grid-row: 1;
+          flex-direction: row;
+          gap: 12px;
+          padding: 12px;
+          border-right: none;
+          border-bottom: 2px solid rgba(94, 217, 255, 0.2);
+          height: auto;
+        }
+        .brand { margin: 0; }
+        .brand h1 { font-size: 1.1rem; }
+        .nav {
+          flex-direction: row;
+          flex-wrap: wrap;
+          flex: 1;
+        }
+        .nav-item { padding: 10px 12px; font-size: 0.85rem; }
+        .status-panel {
+          display: none;
+        }
+        .main-area {
+          grid-row: 2;
+          grid-column: 1;
+        }
+        .topbar {
+          padding: 16px 20px;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .topbar-left h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+        .banner { margin: 16px 20px; padding: 14px 16px; }
+        .chat-container { padding: 0 20px 20px; }
+        .message { max-width: 85%; }
+      }
+
+      @media (max-width: 480px) {
+        .sidebar { padding: 10px; gap: 8px; }
+        .brand { gap: 8px; padding: 8px; }
+        .brand-mark { width: 24px; height: 24px; }
+        .brand h1 { font-size: 1rem; }
+        .nav-item { padding: 8px 10px; font-size: 0.75rem; }
+        .topbar-left h2 { font-size: 1.4rem; }
+        .voice-btn { padding: 10px 16px; font-size: 0.8rem; }
+        .banner { margin: 12px 16px; font-size: 0.85rem; }
+        .chat-container { padding: 0 16px 16px; gap: 12px; }
+        .message { max-width: 90%; font-size: 0.9rem; padding: 12px 14px; }
+        .input-area { padding: 12px; gap: 10px; }
       }
     </style>
   </head>
@@ -255,65 +497,93 @@
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-mark"></span>
+          <div class="brand-mark"></div>
           <h1>NEXUS</h1>
         </div>
 
         <nav class="nav">
-          <button class="nav-item active">Overview</button>
-          <button class="nav-item">Agents</button>
-          <button class="nav-item">Memory</button>
-          <button class="nav-item">System</button>
-          <button class="nav-item">Settings</button>
+          <button class="nav-item active" data-nav="overview">Overview</button>
+          <button class="nav-item" data-nav="agents">Agents</button>
+          <button class="nav-item" data-nav="memory">Memory</button>
+          <button class="nav-item" data-nav="system">System</button>
+          <button class="nav-item" data-nav="settings">Settings</button>
         </nav>
 
-        <div class="status-box">
-          <div class="status-row"><span>Status</span><strong id="statusText">Ready</strong></div>
-          <div class="status-row"><span>Agent</span><strong id="agentText">Idle</strong></div>
+        <div class="status-panel">
+          <div class="status-item">
+            <span class="status-label">System</span>
+            <span class="status-value"><span class="status-indicator"></span>Online</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Status</span>
+            <span class="status-value" id="statusValue">Ready</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Agent</span>
+            <span class="status-value" id="agentValue">Idle</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">CPU</span>
+            <span class="status-value" id="cpuValue">34%</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Memory</span>
+            <span class="status-value" id="memValue">5.8GB</span>
+          </div>
         </div>
       </aside>
 
-      <main class="main">
+      <main class="main-area">
         <header class="topbar">
-          <div>
-            <div class="eyebrow">AI Command Center</div>
+          <div class="topbar-left">
+            <div class="topbar-left-label">AI Command Center</div>
             <h2>Nexus AI Agent</h2>
           </div>
-          <button class="voice-btn">Voice</button>
+          <button class="voice-btn">🎙️ Voice</button>
         </header>
 
         <section class="banner">
           <div class="signal"></div>
-          <div>
+          <div class="banner-text">
             <strong>System Online</strong>
-            <span>Monitoring tasks, memory, system health, and local automation</span>
+            <span>Monitoring tasks, memory, system health, and automation workflows</span>
           </div>
         </section>
 
-        <section class="chat-panel">
+        <div class="chat-container">
           <div class="message-list" id="messageList">
-            <div class="message assistant">Welcome back. I’m Nexus AI Agent. Ask me to open apps, inspect files, and manage workflows.</div>
+            <div class="message system">Welcome to Nexus AI Agent. I'm your command center copilot. Ask me to open apps, manage files, or check system status.</div>
           </div>
 
-          <form class="composer" id="chatForm">
-            <input id="promptInput" placeholder="Ask Nexus to open an app, inspect files, or check system status..." autocomplete="off" />
+          <form class="input-area" id="chatForm">
+            <input 
+              id="promptInput" 
+              type="text"
+              placeholder="Ask Nexus: open apps, check files, analyze processes, remember preferences..." 
+              autocomplete="off"
+            />
             <button type="submit">Send</button>
           </form>
-        </section>
+        </div>
       </main>
     </div>
 
     <script>
-      const statusText = document.getElementById('statusText');
-      const agentText = document.getElementById('agentText');
       const messageList = document.getElementById('messageList');
       const chatForm = document.getElementById('chatForm');
       const promptInput = document.getElementById('promptInput');
+      const statusValue = document.getElementById('statusValue');
+      const agentValue = document.getElementById('agentValue');
+      const cpuValue = document.getElementById('cpuValue');
+      const memValue = document.getElementById('memValue');
 
       const memory = {
         preferredEditor: 'VS Code',
-        projectRoot: 'D:/Projects'
+        projectRoot: 'D:/Projects',
+        workspaceSetup: ['Chrome', 'VS Code', 'Terminal']
       };
+
+      let isProcessing = false;
 
       function addMessage(role, text) {
         const div = document.createElement('div');
@@ -323,79 +593,161 @@
         messageList.scrollTop = messageList.scrollHeight;
       }
 
-      function setAgentState(status, agent) {
-        statusText.textContent = status;
-        agentText.textContent = agent;
+      function showTyping() {
+        const div = document.createElement('div');
+        div.className = 'message assistant';
+        div.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+        div.id = 'typing-indicator';
+        messageList.appendChild(div);
+        messageList.scrollTop = messageList.scrollHeight;
+      }
+
+      function removeTyping() {
+        const typing = document.getElementById('typing-indicator');
+        if (typing) typing.remove();
+      }
+
+      function updateStatus(status, agent) {
+        statusValue.textContent = status;
+        agentValue.textContent = agent;
+      }
+
+      function updateSystemMetrics() {
+        const cpu = Math.floor(Math.random() * 60) + 15;
+        const mem = (Math.random() * 8 + 4).toFixed(1);
+        cpuValue.textContent = cpu + '%';
+        memValue.textContent = mem + 'GB';
+      }
+
+      async function simulateToolExecution(tool, payload, duration = 800) {
+        updateStatus('Executing', tool);
+        await new Promise(resolve => setTimeout(resolve, duration));
       }
 
       function classifyIntent(input) {
         const lower = input.toLowerCase();
 
-        if (lower.includes('open') && lower.includes('vscode')) {
-          return { tool: 'open_app', appName: 'VS Code' };
+        if ((lower.includes('open') || lower.includes('launch')) && lower.includes('vscode')) {
+          return { tool: 'open_app', appName: 'VS Code', icon: '💻' };
+        }
+        if (lower.includes('chrome') || (lower.includes('open') && lower.includes('browser'))) {
+          return { tool: 'open_app', appName: 'Chrome', icon: '🌐' };
+        }
+        if (lower.includes('file') || lower.includes('folder') || lower.includes('show my files') || lower.includes('list')) {
+          return { tool: 'list_files', path: memory.projectRoot, icon: '📁' };
+        }
+        if (lower.includes('ram') || lower.includes('cpu') || lower.includes('process') || lower.includes('memory') || lower.includes('system')) {
+          return { tool: 'system_status', icon: '⚙️' };
+        }
+        if (lower.includes('start') && lower.includes('setup')) {
+          return { tool: 'workspace_setup', icon: '🚀' };
+        }
+        if (lower.includes('remember') || lower.includes('note')) {
+          return { tool: 'remember', key: 'note_' + Date.now(), value: input, icon: '💾' };
+        }
+        if (lower.includes('help') || lower.includes('what can')) {
+          return { tool: 'help', icon: '❓' };
         }
 
-        if (lower.includes('chrome') || lower.includes('browser')) {
-          return { tool: 'open_app', appName: 'Chrome' };
-        }
-
-        if (lower.includes('file') || lower.includes('folder') || lower.includes('show my files')) {
-          return { tool: 'list_files', path: memory.projectRoot };
-        }
-
-        if (lower.includes('ram') || lower.includes('cpu') || lower.includes('process') || lower.includes('system')) {
-          return { tool: 'system_status', command: 'Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, CPU, Id' };
-        }
-
-        if (lower.includes('remember') || lower.includes('memory')) {
-          return { tool: 'remember', key: 'favorite_task', value: input };
-        }
-
-        return { tool: 'chat_reply', message: 'I can open apps, inspect files, check system status, and remember your preferences. Try: "Open VS Code" or "Show my files".' };
+        return { tool: 'chat_reply', icon: '💬' };
       }
 
-      function executeTool(tool, payload) {
-        if (tool === 'open_app') {
-          return `Opened ${payload.appName} successfully.`;
-        }
+      async function executeTool(tool, payload) {
+        switch (tool) {
+          case 'open_app':
+            await simulateToolExecution('open_app', payload, 1200);
+            return `✓ ${payload.icon} Launching ${payload.appName}...`;
 
-        if (tool === 'list_files') {
-          return `Files in ${payload.path}: notes.md, project.json, summary.txt`;
-        }
+          case 'list_files':
+            await simulateToolExecution('list_files', payload, 800);
+            const files = ['project.json', 'notes.md', 'summary.txt', 'config.yaml', 'data.csv'];
+            return `✓ ${payload.icon} Found ${files.length} files in ${payload.path}:\n• ${files.join('\n• ')}`;
 
-        if (tool === 'system_status') {
-          return 'System overview: CPU 34%, Memory 5.8 GB / 16 GB, Disk 70% used.';
-        }
+          case 'system_status':
+            updateSystemMetrics();
+            await simulateToolExecution('system_status', payload, 1000);
+            return `✓ ${payload.icon} System Status:\n• CPU: ${cpuValue.textContent}\n• Memory: ${memValue.textContent} used\n• Disk: 70% used\n• Network: Online\n• Processes: 127 active`;
 
-        if (tool === 'remember') {
-          return `Saved memory: ${payload.key} = ${payload.value}`;
-        }
+          case 'workspace_setup':
+            await simulateToolExecution('workspace_setup', payload, 2000);
+            return `✓ ${payload.icon} Workspace Setup:\n${memory.workspaceSetup.map((app, i) => `${i + 1}. ${app}`).join('\n')}`;
 
-        if (tool === 'chat_reply') {
-          return payload.message;
-        }
+          case 'remember':
+            await simulateToolExecution('remember', payload, 600);
+            return `✓ ${payload.icon} Saved to memory: "${payload.value.substring(0, 50)}..."`;
 
-        return 'Command processed.';
+          case 'help':
+            return `${payload.icon} I can help with:\n• "Open [app]" → Launch applications\n• "Show my files" → List project files\n• "System status" → Check resources\n• "Start my setup" → Initialize workspace\n• "Remember [note]" → Save notes\n\nWhat would you like to do?`;
+
+          case 'chat_reply':
+            await simulateToolExecution('chat_reply', payload, 600);
+            return `I can open apps, inspect files, check system status, and manage your workflow. Try: "Open VS Code" or "Show my files"`;
+
+          default:
+            return 'Command processed.';
+        }
       }
 
-      chatForm.addEventListener('submit', function (event) {
+      chatForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (isProcessing) return;
+
         const text = promptInput.value.trim();
         if (!text) return;
+
+        isProcessing = true;
+        promptInput.disabled = true;
 
         addMessage('user', text);
         promptInput.value = '';
 
-        setAgentState('Thinking...', 'Planning');
+        updateStatus('Thinking...', 'Planning');
+        showTyping();
 
-        setTimeout(() => {
+        try {
           const intent = classifyIntent(text);
-          const response = executeTool(intent.tool, intent);
+          await new Promise(resolve => setTimeout(resolve, 400));
 
-          setAgentState('Complete', 'Idle');
+          removeTyping();
+          const response = await executeTool(intent.tool, intent);
+
+          updateStatus('Complete', 'Idle');
           addMessage('assistant', response);
-        }, 500);
+
+          // Simulate occasional system messages
+          if (Math.random() < 0.3) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const sysMessages = [
+              'Memory usage optimized',
+              'Cache cleared successfully',
+              'Background processes updated'
+            ];
+            addMessage('system', sysMessages[Math.floor(Math.random() * sysMessages.length)]);
+          }
+        } catch (error) {
+          removeTyping();
+          updateStatus('Error', 'Failed');
+          addMessage('assistant', `⚠️ Error: ${error.message}`);
+        } finally {
+          isProcessing = false;
+          promptInput.disabled = false;
+          promptInput.focus();
+        }
       });
+
+      // Nav click handlers
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      // Initial focus
+      promptInput.focus();
+
+      // Update metrics periodically
+      setInterval(updateSystemMetrics, 3000);
     </script>
   </body>
 </html>
